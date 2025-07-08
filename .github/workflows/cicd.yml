@@ -1,0 +1,52 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install backend dependencies
+      run: |
+        cd backend
+        pip install -r requirements.txt
+
+    - name: Lint backend
+      run: |
+        cd backend
+        python -m compileall main.py
+
+    - name: Install frontend dependencies
+      run: |
+        cd frontend
+        pip install -r requirements.txt
+
+    - name: Lint frontend
+      run: |
+        cd frontend
+        python -m compileall app.py
+
+    - name: Build backend Docker image
+      run: docker build -f backend.Dockerfile -t chatbot-backend .
+
+    - name: Build frontend Docker image
+      run: docker build -f frontend.Dockerfile -t chatbot-frontend .
+
+    env:
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
